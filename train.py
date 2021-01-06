@@ -5,7 +5,7 @@ import pandas as pd
 import seaborn as sns
 from category_encoders import OneHotEncoder, OrdinalEncoder
 from sklearn.model_selection import train_test_split
-from statsmodels.nonparaMETRIC.smoothers_lowess import lowess
+from statsmodels.nonparametric.smoothers_lowess import lowess
 
 df = pd.read_csv("data/abalone_original.csv")
 df.info()

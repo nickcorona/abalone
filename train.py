@@ -5,7 +5,7 @@ import pandas as pd  # data processing, CSV file I/O (e.g. pd.read_csv)
 import seaborn as sns
 from category_encoders import OneHotEncoder, OrdinalEncoder
 from sklearn.model_selection import train_test_split
-from statsmodels.nonparametric.smoothers_lowess import lowess
+from statsmodels.nonparaMETRIC.smoothers_lowess import lowess
 
 df = pd.read_csv("data/abalone_original.csv")
 df.info()
@@ -27,7 +27,7 @@ MAXIMIZE = False
 
 params = {
     "objective": OBJECTIVE,
-    "metric": METRIC,
+    "METRIC": METRIC,
     "verbose": -1,
 }
 
@@ -75,7 +75,7 @@ rounded_data = lowess_data.copy()
 rounded_data[:, 1] = rounded_data[:, 1].round(4)
 rounded_data = rounded_data[::-1]  # reverse to find first best
 
-# maximize or minimize metric
+# maximize or minimize METRIC
 # e.g. binary loss needs minimizing, whereas AUC requires maximizing
 if MAXIMIZE:
     best = np.argmax
@@ -86,7 +86,7 @@ good_eta = rounded_data[best(rounded_data[:, 1]), 0]
 # plot relationship between learning rate and performance, with an eta selected just before diminishing returns
 print(f"Good learning rate: {good_eta:4f}")
 plt.axvline(good_eta, color="orange")
-plt.title("Smoothed relationship between learning rate and metric.")
+plt.title("Smoothed relationship between learning rate and METRIC.")
 plt.xlabel("learning rate")
 plt.ylabel(METRIC)
 sns.lineplot(x=lowess_data[:, 0], y=lowess_data[:, 1])
@@ -114,29 +114,61 @@ abs_high_upper = abs(high_upper).sort_values(ascending=False)
 pairs = abs_high_upper.index.to_list()
 print(f"Correlated features: {pairs if len(pairs) > 0 else None}")
 
-sorted_features = [
-    feature
-    for _, feature in sorted(
-        zip(model.feature_importance(), model.feature_name()[0]),
-        reverse=False,
-    )
-]
 
-best_score = history[f"{METRIC}-mean"][-1]
+# drop correlated features
+best_score = model.best_score["valid"][METRIC]
+print(f"starting score: {best_score:.4f}")
+drop_dict = {pair: [] for pair in pairs}
+correlated_features = set()
+for pair in pairs:
+    for feature in pair:
+        correlated_features.add(feature)
+        Xt, Xv, yt, yv = train_test_split(
+            X.drop(correlated_features, axis=1), y, random_state=SEED
+        )
+        dt = lgb.Dataset(Xt, yt, silent=True)
+        dv = lgb.Dataset(Xv, yv, silent=True)
+        drop_model = lgb.train(
+            params,
+            dt,
+            valid_sets=[dt, dv],
+            valid_names=["training", "valid"],
+            num_boost_round=10000,
+            early_stopping_rounds=50,
+            verbose_eval=False,
+        )
+        drop_dict[pair].append(drop_model.best_score["valid"][METRIC])
+        correlated_features.remove(feature)  # remove from drop list
+    pair_min = np.min(drop_dict[pair])
+    if pair_min <= best_score:
+        drop_feature = pair[
+            np.argmin(drop_dict[pair])
+        ]  # add to drop_feature the one that reduces score
+        best_score = pair_min
+        correlated_features.add(drop_feature)
+print(f"ending score: {best_score:.4f}")
+print(
+    f"dropped features: {correlated_features if len(correlated_features) > 0 else None}"
+)
+
+best_score = model.best_score['valid'][METRIC]
 print(f"starting score: {best_score:.4f}")
 drop_unimportant_features = []
 for feature in sorted_features:
     drop_unimportant_features.append(feature)
-    d = lgb.Dataset(X.drop(drop_unimportant_features, axis=1), y)
-    drop_history = lgb.cv(
+    dt = lgb.Dataset(Xt.drop(drop_unimportant_features, axis=1), y)
+    dv = lgb.Dataset(Xv.drop(drop_unimportant_features, axis=1), y)
+
+    drop_model = lgb.train(
         params,
-        d,
+        dt,
+        valid_sets=[dt, dv],
+        valid_names=['training', 'valid'],
         num_boost_round=10000,
         early_stopping_rounds=50,
         verbose_eval=False,
-        stratified=False,
     )
-    score = drop_history[f"{METRIC}-mean"][-1]
+    score = drop_model.best_score['valid'][METRIC]
     if score > best_score:
         del drop_unimportant_features[-1]  # remove from drop list
         print(f"Dropping {feature} worsened score to {score:.4f}.")
@@ -153,7 +185,7 @@ from sklearn.model_selection import KFold
 
 # params = {
 #     "objective": OBJECTIVE,
-#     "metric": METRIC,
+#     "METRIC": METRIC,
 #     "verbose": -1,
 #     "boosting_type": "gbdt",
 #     "eta": good_eta,

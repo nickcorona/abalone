@@ -16,7 +16,7 @@ X = df.drop("rings", axis=1)
 X["sex"] = X["sex"].astype("category")
 
 SEED = 0
-Xt, Xv, yt, yv = train_test_split(X, y, random_state=SEED)
+Xt, Xv, yt, yv = train_test_split(X, y, random_state=SEED)  # split into train and validation set
 dt = lgb.Dataset(Xt, yt, silent=True)
 dv = lgb.Dataset(Xv, yv, silent=True)
 

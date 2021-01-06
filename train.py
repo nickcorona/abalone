@@ -16,7 +16,9 @@ X = df.drop("rings", axis=1)
 X["sex"] = X["sex"].astype("category")
 
 SEED = 0
-Xt, Xv, yt, yv = train_test_split(X, y, random_state=SEED)  # split into train and validation set
+Xt, Xv, yt, yv = train_test_split(
+    X, y, random_state=SEED
+)  # split into train and validation set
 dt = lgb.Dataset(Xt, yt, silent=True)
 dv = lgb.Dataset(Xv, yv, silent=True)
 
@@ -24,8 +26,8 @@ dv = lgb.Dataset(Xv, yv, silent=True)
 OBJECTIVE = "regression"
 METRIC = "rmse"
 MAXIMIZE = False
-EARLY_STOPPING_ROUNDS=25
-MAX_ROUNDS=10000
+EARLY_STOPPING_ROUNDS = 25
+MAX_ROUNDS = 10000
 
 params = {
     "objective": OBJECTIVE,

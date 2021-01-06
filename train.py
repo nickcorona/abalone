@@ -49,7 +49,7 @@ def loguniform(low=0, high=1, size=None, base=10):
 best_etas = {"eta": [], "score": []}
 
 for _ in range(60):
-    eta = loguniform(-4, 0)
+    eta = loguniform(-5, 0)
     best_etas["eta"].append(eta)
     params["eta"] = eta
     model = lgb.train(
@@ -61,7 +61,7 @@ for _ in range(60):
         early_stopping_rounds=50,
         verbose_eval=False,
     )
-    best_etas["score"].append(model.best_score)
+    best_etas["score"].append(model.best_score['valid'][METRIC])
 
 best_eta_df = pd.DataFrame.from_dict(best_etas)
 lowess_data = lowess(

@@ -196,7 +196,6 @@ import optuna.integration.lightgbm as lgb
 dt = lgb.Dataset(Xt, yt, silent=True)
 dv = lgb.Dataset(Xv, yv, silent=True)
 
-
 model = lgb.train(
     params,
     dt,
@@ -216,24 +215,18 @@ print("  Params: ")
 for key, value in best_params.items():
     print("    {}: {}".format(key, value))
 
-history = lgb.cv(
-    best_params,
-    d,
+
+import lightgbm as lgb
+
+model = lgb.train(
+    params,
+    dt,
+    valid_sets=[dt, dv],
+    valid_names=["training", "valid"],
     num_boost_round=10000,
     early_stopping_rounds=50,
     verbose_eval=10,
-    return_cvbooster=True,
 )
 
-model = history["cvbooster"]
-importances = model.feature_importance(importance_type="split")
-n_features = len(importances[0])
-n_folds = len(importances)
-average_importance = np.array([0] * n_features)
-for importance in importances:
-    average_importance += importance
-average_importance = average_importance / n_folds
-
-idx = np.argsort(average_importance)
-sns.barplot(x=average_importance, y=model.feature_name()[0])
+lgb.plot_importance(model, importance_type='gain', grid=False)
 plt.show()

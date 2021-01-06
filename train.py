@@ -49,7 +49,7 @@ def loguniform(low=0, high=1, size=None, base=10):
 best_etas = {"eta": [], "score": []}
 
 for _ in range(60):
-    eta = loguniform(-5, 0)
+    eta = loguniform(-5, -1)
     best_etas["eta"].append(eta)
     params["eta"] = eta
     model = lgb.train(

@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from category_encoders import OneHotEncoder, OrdinalEncoder
+from category_encoders import OneHotEncoder, OrdinalEncoder  # sometimes needed
 from sklearn.model_selection import train_test_split
 from statsmodels.nonparametric.smoothers_lowess import lowess
 

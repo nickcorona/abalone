@@ -7,11 +7,11 @@ from category_encoders import OneHotEncoder, OrdinalEncoder
 from sklearn.model_selection import train_test_split
 from statsmodels.nonparametric.smoothers_lowess import lowess
 
-df = pd.read_csv("data/heart_failure_clinical_records_dataset.csv")
+df = pd.read_csv("data/abalone_original.csv")
 df.info()
 
-y = df["DEATH_EVENT"]
-X = df.drop("DEATH_EVENT", axis=1)
+y = df["rings"]
+X = df.drop("rings", axis=1)
 
 d = lgb.Dataset(X, y, silent=True)
 

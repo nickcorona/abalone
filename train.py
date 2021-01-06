@@ -228,5 +228,5 @@ model = lgb.train(
     verbose_eval=10,
 )
 
-lgb.plot_importance(model, importance_type='gain', grid=False)
+lgb.plot_importance(model, importance_type="gain", grid=False)
 plt.show()

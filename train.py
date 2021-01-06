@@ -219,7 +219,7 @@ print("Best params:", best_params)
 print(f"  {METRIC} = {score}")
 print("  Params: ")
 for key, value in best_params.items():
-    print("    {}: {}".format(key, value))
+    print(f"    {key}: {value}")
 
 
 import lightgbm as lgb

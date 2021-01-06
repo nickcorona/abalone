@@ -13,7 +13,7 @@ df.info()
 y = df["rings"]
 X = df.drop("rings", axis=1)
 
-X['sex'] = X['sex'].astype('category')
+X["sex"] = X["sex"].astype("category")
 
 SEED = 0
 Xt, Xv, yt, yv = train_test_split(X, y, random_state=SEED)
@@ -35,7 +35,7 @@ history = lgb.train(
     params,
     dt,
     valid_sets=[dt, dv],
-    valid_names=['training', 'valid'],
+    valid_names=["training", "valid"],
     num_boost_round=10000,
     early_stopping_rounds=25,
     verbose_eval=10,
@@ -56,12 +56,12 @@ for _ in range(60):
         params,
         dt,
         valid_sets=[dt, dv],
-        valid_names=['training', 'valid'],
+        valid_names=["training", "valid"],
         num_boost_round=10000,
         early_stopping_rounds=50,
         verbose_eval=False,
     )
-    best_etas["score"].append(model.best_score['valid'][METRIC])
+    best_etas["score"].append(model.best_score["valid"][METRIC])
 
 best_eta_df = pd.DataFrame.from_dict(best_etas)
 lowess_data = lowess(
@@ -98,7 +98,7 @@ model = lgb.train(
     params,
     dt,
     valid_sets=[dt, dv],
-    valid_names=['training', 'valid'],
+    valid_names=["training", "valid"],
     num_boost_round=10000,
     early_stopping_rounds=50,
     verbose_eval=10,
@@ -151,55 +151,65 @@ print(
     f"dropped features: {correlated_features if len(correlated_features) > 0 else None}"
 )
 
-best_score = model.best_score['valid'][METRIC]
+sorted_features = [
+    feature
+    for _, feature in sorted(
+        zip(model.feature_importance(importance_type="gain"), model.feature_name()),
+        reverse=False,
+    )
+]
+
+best_score = model.best_score["valid"][METRIC]
 print(f"starting score: {best_score:.4f}")
-drop_unimportant_features = []
+unimportant_features = []
 for feature in sorted_features:
-    drop_unimportant_features.append(feature)
-    dt = lgb.Dataset(Xt.drop(drop_unimportant_features, axis=1), y)
-    dv = lgb.Dataset(Xv.drop(drop_unimportant_features, axis=1), y)
+    unimportant_features.append(feature)
+    Xt, Xv, yt, yv = train_test_split(
+        X.drop(unimportant_features, axis=1), y, random_state=SEED
+    )
+    dt = lgb.Dataset(Xt, yt, silent=True)
+    dv = lgb.Dataset(Xv, yv, silent=True)
 
     drop_model = lgb.train(
         params,
         dt,
         valid_sets=[dt, dv],
-        valid_names=['training', 'valid'],
+        valid_names=["training", "valid"],
         num_boost_round=10000,
         early_stopping_rounds=50,
         verbose_eval=False,
     )
-    score = drop_model.best_score['valid'][METRIC]
+    score = drop_model.best_score["valid"][METRIC]
     if score > best_score:
-        del drop_unimportant_features[-1]  # remove from drop list
+        del unimportant_features[-1]  # remove from drop list
         print(f"Dropping {feature} worsened score to {score:.4f}.")
         break
     else:
         best_score = score
 print(f"ending score: {best_score:.4f}")
 print(
-    f"dropped features: {drop_unimportant_features if len(drop_unimportant_features) > 0 else None}"
+    f"dropped features: {unimportant_features if len(unimportant_features) > 0 else None}"
 )
 
 import optuna.integration.lightgbm as lgb
-from sklearn.model_selection import KFold
 
-# params = {
-#     "objective": OBJECTIVE,
-#     "METRIC": METRIC,
-#     "verbose": -1,
-#     "boosting_type": "gbdt",
-#     "eta": good_eta,
-# }
+dt = lgb.Dataset(Xt, yt, silent=True)
+dv = lgb.Dataset(Xv, yv, silent=True)
 
-d = lgb.Dataset(X, y)
 
-tuner = lgb.LightGBMTunerCV(
-    params, d, verbose_eval=False, early_stopping_rounds=50, folds=KFold(n_splits=3)
+model = lgb.train(
+    params,
+    dt,
+    valid_sets=[dt, dv],
+    valid_names=["training", "valid"],
+    num_boost_round=10000,
+    verbose_eval=False,
+    early_stopping_rounds=50,
 )
-tuner.run()
-score = history[f"{METRIC}-mean"][-1]
 
-best_params = tuner.best_params
+score = model.best_score["valid"][METRIC]
+
+best_params = model.params
 print("Best params:", best_params)
 print(f"  {METRIC} = {score}")
 print("  Params: ")

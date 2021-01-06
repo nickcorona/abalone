@@ -13,26 +13,32 @@ df.info()
 y = df["rings"]
 X = df.drop("rings", axis=1)
 
-d = lgb.Dataset(X, y, silent=True)
+X['sex'] = X['sex'].astype('category')
 
-OBJECTIVE = "binary"
-METRIC = "binary_logloss"
+SEED = 0
+Xt, Xv, yt, yv = train_test_split(X, y, random_state=SEED)
+dt = lgb.Dataset(Xt, yt, silent=True)
+dv = lgb.Dataset(Xv, yv, silent=True)
+
+
+OBJECTIVE = "regression"
+METRIC = "rmse"
 MAXIMIZE = False
 
 params = {
     "objective": OBJECTIVE,
     "metric": METRIC,
-    "force_col_wise": True,
     "verbose": -1,
 }
 
-history = lgb.cv(
+history = lgb.train(
     params,
-    d,
+    dt,
+    valid_sets=[dt, dv],
+    valid_names=['training', 'valid'],
     num_boost_round=10000,
-    early_stopping_rounds=50,
+    early_stopping_rounds=25,
     verbose_eval=10,
-    return_cvbooster=False,
 )
 
 

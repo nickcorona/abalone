@@ -28,6 +28,7 @@ METRIC = "rmse"
 MAXIMIZE = False
 EARLY_STOPPING_ROUNDS = 25
 MAX_ROUNDS = 10000
+REPORT_ROUNDS = 10
 
 params = {
     "objective": OBJECTIVE,
@@ -42,7 +43,7 @@ history = lgb.train(
     valid_names=["training", "valid"],
     num_boost_round=MAX_ROUNDS,
     early_stopping_rounds=EARLY_STOPPING_ROUNDS,
-    verbose_eval=10,
+    verbose_eval=REPORT_ROUNDS,
 )
 
 
@@ -106,7 +107,7 @@ model = lgb.train(
     valid_names=["training", "valid"],
     num_boost_round=MAX_ROUNDS,
     early_stopping_rounds=EARLY_STOPPING_ROUNDS,
-    verbose_eval=10,
+    verbose_eval=REPORT_ROUNDS,
 )
 
 
@@ -230,7 +231,7 @@ model = lgb.train(
     valid_names=["training", "valid"],
     num_boost_round=MAX_ROUNDS,
     early_stopping_rounds=EARLY_STOPPING_ROUNDS,
-    verbose_eval=10,
+    verbose_eval=REPORT_ROUNDS,
 )
 
 lgb.plot_importance(model, importance_type="gain", grid=False)

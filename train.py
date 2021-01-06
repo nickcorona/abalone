@@ -94,18 +94,19 @@ plt.show()
 
 params["eta"] = good_eta
 
-history = lgb.cv(
+model = lgb.train(
     params,
-    d,
+    dt,
+    valid_sets=[dt, dv],
+    valid_names=['training', 'valid'],
     num_boost_round=10000,
     early_stopping_rounds=50,
     verbose_eval=10,
-    return_cvbooster=True,
 )
 
 
 threshold = 0.75
-corr = X.corr(method="kendall")
+corr = Xt.corr(method="kendall")
 upper = corr.where(np.triu(np.ones(corr.shape), k=1).astype(np.bool))
 upper = upper.stack()
 high_upper = upper[(abs(upper) > threshold)]
@@ -113,19 +114,10 @@ abs_high_upper = abs(high_upper).sort_values(ascending=False)
 pairs = abs_high_upper.index.to_list()
 print(f"Correlated features: {pairs if len(pairs) > 0 else None}")
 
-model = history["cvbooster"]
-importances = model.feature_importance(importance_type="split")
-n_features = len(importances[0])
-n_folds = len(importances)
-average_importance = np.array([0] * n_features)
-for importance in importances:
-    average_importance += importance
-total_importance = average_importance / n_folds
-
 sorted_features = [
     feature
     for _, feature in sorted(
-        zip(average_importance, model.feature_name()[0]),
+        zip(model.feature_importance(), model.feature_name()[0]),
         reverse=False,
     )
 ]

@@ -24,6 +24,8 @@ dv = lgb.Dataset(Xv, yv, silent=True)
 OBJECTIVE = "regression"
 METRIC = "rmse"
 MAXIMIZE = False
+EARLY_STOPPING_ROUNDS=25
+MAX_ROUNDS=10000
 
 params = {
     "objective": OBJECTIVE,
@@ -36,8 +38,8 @@ history = lgb.train(
     dt,
     valid_sets=[dt, dv],
     valid_names=["training", "valid"],
-    num_boost_round=10000,
-    early_stopping_rounds=25,
+    num_boost_round=MAX_ROUNDS,
+    early_stopping_rounds=EARLY_STOPPING_ROUNDS,
     verbose_eval=10,
 )
 
@@ -58,8 +60,8 @@ for _ in range(60):
         dt,
         valid_sets=[dt, dv],
         valid_names=["training", "valid"],
-        num_boost_round=10000,
-        early_stopping_rounds=50,
+        num_boost_round=MAX_ROUNDS,
+        early_stopping_rounds=EARLY_STOPPING_ROUNDS,
         verbose_eval=False,
     )
     best_etas["score"].append(model.best_score["valid"][METRIC])
@@ -100,8 +102,8 @@ model = lgb.train(
     dt,
     valid_sets=[dt, dv],
     valid_names=["training", "valid"],
-    num_boost_round=10000,
-    early_stopping_rounds=50,
+    num_boost_round=MAX_ROUNDS,
+    early_stopping_rounds=EARLY_STOPPING_ROUNDS,
     verbose_eval=10,
 )
 
@@ -134,8 +136,8 @@ for pair in pairs:
             dt,
             valid_sets=[dt, dv],
             valid_names=["training", "valid"],
-            num_boost_round=10000,
-            early_stopping_rounds=50,
+            num_boost_round=MAX_ROUNDS,
+            early_stopping_rounds=EARLY_STOPPING_ROUNDS,
             verbose_eval=False,
         )
         drop_dict[pair].append(drop_model.best_score["valid"][METRIC])
@@ -176,8 +178,8 @@ for feature in sorted_features:
         dt,
         valid_sets=[dt, dv],
         valid_names=["training", "valid"],
-        num_boost_round=10000,
-        early_stopping_rounds=50,
+        num_boost_round=MAX_ROUNDS,
+        early_stopping_rounds=EARLY_STOPPING_ROUNDS,
         verbose_eval=False,
     )
     score = drop_model.best_score["valid"][METRIC]
@@ -202,9 +204,9 @@ model = lgb.train(
     dt,
     valid_sets=[dt, dv],
     valid_names=["training", "valid"],
-    num_boost_round=10000,
+    num_boost_round=MAX_ROUNDS,
     verbose_eval=False,
-    early_stopping_rounds=50,
+    early_stopping_rounds=EARLY_STOPPING_ROUNDS,
 )
 
 score = model.best_score["valid"][METRIC]
@@ -224,8 +226,8 @@ model = lgb.train(
     dt,
     valid_sets=[dt, dv],
     valid_names=["training", "valid"],
-    num_boost_round=10000,
-    early_stopping_rounds=50,
+    num_boost_round=MAX_ROUNDS,
+    early_stopping_rounds=EARLY_STOPPING_ROUNDS,
     verbose_eval=10,
 )
 

@@ -52,14 +52,16 @@ for _ in range(60):
     eta = loguniform(-4, 0)
     best_etas["eta"].append(eta)
     params["eta"] = eta
-    model = lgb.cv(
+    model = lgb.train(
         params,
-        d,
+        dt,
+        valid_sets=[dt, dv],
+        valid_names=['training', 'valid'],
         num_boost_round=10000,
         early_stopping_rounds=50,
         verbose_eval=False,
     )
-    best_etas["score"].append(model[f"{METRIC}-mean"][-1])
+    best_etas["score"].append(model.best_score)
 
 best_eta_df = pd.DataFrame.from_dict(best_etas)
 lowess_data = lowess(
